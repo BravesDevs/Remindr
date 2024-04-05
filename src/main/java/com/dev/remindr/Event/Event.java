@@ -6,6 +6,9 @@ import jakarta.persistence.*;
 import java.util.Date;
 
 @Entity(name = "Event")
+@Table(name = "event", uniqueConstraints = {
+
+})
 public class Event {
     @Id
     @SequenceGenerator(name = "event_sequence",
@@ -28,8 +31,28 @@ public class Event {
     private Date reminderDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false, foreignKey = @ForeignKey(name = "user_id_fk"))
     private User user;
+    @Transient
+    private int units;
+
+    public enum Unit {
+        MINUTE(60),
+        HOUR(3600),
+        DAY(86400);
+        private final int i;
+
+        Unit(int i) {
+            this.i = i;
+        }
+
+        public int toSeconds(int amount) {
+            return amount * this.i;
+        }
+    }
+
+    @Transient
+    private Unit unit;
 
     public Long getId() {
         return id;
@@ -79,6 +102,29 @@ public class Event {
         this.user = user;
     }
 
+    public int getUnits() {
+        if (this.unit == null) {
+            return 1;
+        }
+        return units;
+    }
+
+    public Unit getUnit() {
+        if (this.unit == null) {
+            return Unit.HOUR;
+        }
+        return unit;
+    }
+
+    public void setUnit(Unit unit) {
+        this.unit = unit;
+    }
+
+    public void setUnits(int units) {
+        this.units = units;
+
+    }
+
     @Override
     public String toString() {
         return "Event{" +
@@ -94,20 +140,34 @@ public class Event {
     public Event() {
     }
 
-    public Event(Long id, String name, String description, Date dueDate, Date reminderDate, User user) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.dueDate = dueDate;
-        this.reminderDate = reminderDate;
-        this.user = user;
-    }
-
     public Event(String name, String description, Date dueDate, Date reminderDate, User user) {
         this.name = name;
         this.description = description;
         this.dueDate = dueDate;
         this.reminderDate = reminderDate;
         this.user = user;
+        this.units = 1;
+        this.unit = Unit.HOUR;
+    }
+
+    public Event(Long id, String name, String description, Date dueDate, Date reminderDate, User user, int units, Unit unit) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.dueDate = dueDate;
+        this.reminderDate = reminderDate;
+        this.user = user;
+        this.units = units;
+        this.unit = unit;
+    }
+
+    public Event(String name, String description, Date dueDate, Date reminderDate, User user, int units, Unit unit) {
+        this.name = name;
+        this.description = description;
+        this.dueDate = dueDate;
+        this.reminderDate = reminderDate;
+        this.user = user;
+        this.units = units;
+        this.unit = unit;
     }
 }
